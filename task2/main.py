@@ -1,4 +1,3 @@
-import argparse
 from bson.objectid import ObjectId
 
 from pymongo.mongo_client import MongoClient

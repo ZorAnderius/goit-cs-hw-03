@@ -10,7 +10,7 @@ config = dotenv_values("./task1/.env")
 
 conn = psycopg2.connect(
     host="localhost",
-    database=config["NAME_DB"],
+    database='tasks',
     user=config["USER_DB"],
     password=config["PASSWORD_DB"]
 )

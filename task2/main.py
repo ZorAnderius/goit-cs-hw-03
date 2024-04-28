@@ -1,117 +1,79 @@
-from bson.objectid import ObjectId
-
 from pymongo.mongo_client import MongoClient
-from pymongo.server_api import ServerApi
 
-uri = "mongodb://localhost:27017"
+from create import create, initialize_db
+from read import read, readByName
+from update import update_all, update_age, update_features
+from delete import delete, delete_by_name, delete_all
 
-# Create a new client and connect to the server
-client = MongoClient(uri, server_api=ServerApi("1"))
-
-db = client.hw3_task2
-
-def isChange(title):
-    while True:
-        change = str(input(f"Change {title} Y/N: "))
-        if change:
-            change = change.lower()
-            if  change == "y":
-                return False
-            elif change == "n":
-                return True
-        print("Wrong input. Try again or 'exit' to exit")
-
-def inputField(update=False):
-    change = False
-    name = None
-    age = None
-    features = None
-    if update:
-        change = isChange('name')
-    if not change:
-        name = str(input("Enter name: "))
-
-    if update:
-        change = isChange("age")
-    if not change:
-            while True:
-                try:
-                    age = int(input("Enter age: "))
-                    break
-                except ValueError:
-                    print("Invalid age")
-
-    if update:
-        change = isChange("all features")
-    if not change:
-        features = []
-    while True and not change:
-        feature = str(input("Enter features('exit' for exit): "))
-        if feature == 'exit':
-            break
-        features.append(feature)
-    return (name, age, features)
-
-
-def read():
-    cats = db.cats.find()
-    return cats
-
-
-def create():
-    [name, age, features] = inputField()
-    return db.cats.insert_one({"name": name, "age": age, "features": features})
-
-
-def update():
-    pk = str(input("Enter id: "))
-    [new_name, new_age, new_features] = inputField(True)
-    cats = db.cats.find_one({"_id": ObjectId(pk)})
-
-    name = new_name if new_name  else cats['name']
-    age = new_age if new_age else cats['age']
-    features =new_features if new_features else cats['features']
-    return db.cats.update_one(
-        {"_id": ObjectId(pk)},
-        {"$set": {"name": name, "age": age, "features": features}},
-    )
-
-
-def delete():
-    pk = str(input("Enter id: "))
-    return db.cats.delete_one({"_id": ObjectId(pk)})
-
-
-if __name__ == "__main__":
-    while True:
-        print("""
+template = """
               1. Create
-              2. Read
-              3. Update
-              4. Delete
-              5. Exit
+              
+              2. Show all cats
+              3. Show cat by name
+              
+              4. Update all fields by ID
+              5. Update cat's age by name
+              6. Update cat's features by name
+              
+              7. Delete by ID
+              8. Delete by name
+              9. Delete all
+              
+              10. Initialize database with 10 random cats
+              0. Exit
               """
-        )
+
+def main():
+    uri = "mongodb://localhost:27017"
+
+    # Create a new client and connect to the server
+    client = MongoClient(uri, server_api=ServerApi("1"))
+
+    db = client.hw3_task2
+    while True:
+        print(template)
         try:
             action = int(input("Enter number of action: "))
         except ValueError:
-            print('Wrong action')
+            print("Wrong action")
             continue
-        
+
         match action:
             case 1:
-                r = create()
+                r = create(db)
                 print(r.inserted_id)
             case 2:
-                [print(cat) for cat in read()]
+                cats = read(db)
+                [print(cat) for cat in cats]
             case 3:
-                r = update()
-                print(r.modified_count)
+                cat = readByName(db)
+                print(cat if cat else "Cat not found")
             case 4:
-                r = delete()
-                print(r.deleted_count)
+                r = update_all(db)
+                print(r.modified_count if r else "Cat was not found")
             case 5:
+                r = update_age(db)
+                print(r.modified_count if r else "Cat was not found or update was cancelled")
+            case 6:
+                r = update_features(db)
+                print(r.modified_count if r else "Cat was not found")
+            case 7:
+                r = delete(db)
+                print(r.deleted_count)
+            case 8:
+                r = delete_by_name(db)
+                print(r.deleted_count)
+            case 9:
+                r = delete_all(db)
+                print(r.deleted_count)
+            case 10:
+                initialize_db(db)
+            case 0:
                 print("Bye-bey my charry pie!")
                 break
             case _:
                 print("Wrong action")
+
+
+if __name__ == "__main__":
+    main()

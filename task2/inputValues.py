@@ -17,7 +17,6 @@ def inputField(update=False):
                 break
             except ValueError:
                 print("Invalid age")
-
     if update:
         change = isChange("all features")
     if not change:
